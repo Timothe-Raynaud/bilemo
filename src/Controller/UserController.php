@@ -19,39 +19,44 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/api')]
 class UserController extends AbstractController
 {
-    #[Route('/{id}/users', name: 'users', methods: ['GET'])]
-    public function getUsers(Client $client, UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
+    #[Route('/users', name: 'users', methods: ['GET'])]
+    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
-        $users = $userRepository->findBy(['client' => $client]);
+        $users = $userRepository->findBy(['client' => $this->getUser()]);
         $jsonUsers = $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/{id}/users/{user_id}', name: 'user', methods: ['GET'])]
-    #[Entity('user', options: ['id' => 'user_id'])]
-    public function getUserDetail(Client $client, User $user, SerializerInterface $serializer): JsonResponse
+    #[Route('/users/{id}', name: 'user', methods: ['GET'])]
+    public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
-        // TODO Verify if client is connected
+        if ($user->getClient() !== $this->getUser()){
+            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
+        }
+
         $jsonSmartphone = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
 
         return new JsonResponse($jsonSmartphone, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/{id}/users/{user_id}', name: 'deleteUser', methods: ['DELETE'])]
-    #[Entity('user', options: ['id' => 'user_id'])]
-    public function deleteUser(Client $client, User $user, EntityManagerInterface $em): JsonResponse
+    #[Route('/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
+    public function deleteUser(User $user, EntityManagerInterface $em): JsonResponse
     {
-        // TODO Verify if client is connected
+        if ($user->getClient() !== $this->getUser()){
+            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->remove($user);
         $em->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/{id}/users', name:"createUser", methods: ['POST'])]
-    public function createUser(Client $client, Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
+    #[Route('/users', name:"createUser", methods: ['POST'])]
+    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
+        $client = $this->getUser();
         $user = $serializer->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
         $user->setClient($client);
 

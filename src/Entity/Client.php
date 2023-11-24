@@ -6,10 +6,12 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
-class Client
+class Client implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -21,9 +23,11 @@ class Client
     #[Groups(["getUsers"])]
     private ?string $name = null;
 
-    #[ORM\Column(length: 512, nullable: true)]
-    #[Groups(["getUsers"])]
-    private ?string $token = null;
+    #[ORM\Column(type: "string", unique: true)]
+    private string $username;
+
+    #[ORM\Column(type: "string", length: 255)]
+    private string $password;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: User::class, orphanRemoval: true)]
     private Collection $users;
@@ -46,18 +50,6 @@ class Client
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function setToken(?string $token): static
-    {
-        $this->token = $token;
 
         return $this;
     }
@@ -91,4 +83,44 @@ class Client
 
         return $this;
     }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): void
+    {
+        $this->username = $username;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function getSalt() : ?string
+    {
+        return null;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->username;
+    }
+
+    public function eraseCredentials() : void
+    {
+    }
+
 }
