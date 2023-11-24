@@ -3,49 +3,78 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use Doctrine\DBAL\Types\Types;
+use http\Message;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[ORM\GeneratedValue]
+    #[Groups(["getUsers", "addUser"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getUsers", "addUser"])]
+    #[Assert\NotBlank(message: "Le username est obligatoire")]
+    #[Assert\Length(min: 5, max: 255,
+        minMessage: "Le username doit faire au moins {{ limit }} caractères",
+        maxMessage: "Le username ne peut pas faire plus de {{ limit }} caractères"
+    )]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getUsers", "addUser"])]
+    #[Assert\NotBlank(message: "L'email est obligatoire")]
+    #[Assert\Email(message: 'The email {{ value }} is not a valid email.',)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getUsers", "addUser"])]
+    #[Assert\NotBlank(message: "Le password est obligatoire")]
+    #[Assert\Length(min: 5, max: 255,
+        minMessage: "Le password doit faire au moins {{ limit }} caractères",
+        maxMessage: "Le password ne peut pas faire plus de {{ limit }} caractères"
+    )]
     private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getUsers", "addUser"])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getUsers", "addUser"])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getUsers", "addUser"])]
     private ?string $address = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getUsers", "addUser"])]
     private ?string $cellphone = null;
 
     #[ORM\Column(length: 15, nullable: true)]
+    #[Groups(["getUsers", "addUser"])]
     private ?string $zipcode = null;
 
     #[ORM\Column]
+    #[Groups(["getUsers", "addUser"])]
+    #[Assert\NotBlank(message: "La valeur is_registered est obligatoire")]
     private ?bool $is_registered = null;
 
     #[ORM\Column]
+    #[Groups(["getUsers", "addUser"])]
+    #[Assert\NotBlank(message: "Un role est obligatoire")]
     private array $role = [];
 
     #[ORM\ManyToOne(inversedBy: 'users')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getUsers"])]
+    #[Assert\NotBlank(message: "Le client est obligatoire")]
     private ?Client $client = null;
 
     public function getId(): ?int
