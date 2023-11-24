@@ -51,7 +51,7 @@ class AppFixtures extends Fixture
                 ->setFirstname('Firstname' . $i)
                 ->setLastname('Lastname' . $i)
                 ->setIsRegistered($i%2 ? 0 : 1)
-                ->setZipcode($i . $i . ' ' . $i . $i . $i)
+                ->setZipcode(random_int( 10000 , 99999 ))
                 ->setRole($i%4 ? (array)'ROLE_BASE' : (array)'ROLE_PREMIUM')
             ;
 

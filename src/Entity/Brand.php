@@ -18,14 +18,6 @@ class Brand
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'brand', targetEntity: Product::class)]
-    private Collection $product;
-
-    public function __construct()
-    {
-        $this->product = new ArrayCollection();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -39,36 +31,6 @@ class Brand
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Product>
-     */
-    public function getProduct(): Collection
-    {
-        return $this->product;
-    }
-
-    public function addProduct(Product $product): static
-    {
-        if (!$this->product->contains($product)) {
-            $this->product->add($product);
-            $product->setBrand($this);
-        }
-
-        return $this;
-    }
-
-    public function removeProduct(Product $product): static
-    {
-        if ($this->product->removeElement($product)) {
-            // set the owning side to null (unless already changed)
-            if ($product->getBrand() === $this) {
-                $product->setBrand(null);
-            }
-        }
 
         return $this;
     }
