@@ -8,9 +8,17 @@ use App\Entity\Smartphone;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    private UserPasswordHasherInterface $userPasswordHasher;
+
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
     public function load(ObjectManager $manager): void
     {
         $brand1 = new Brand();
@@ -22,11 +30,18 @@ class AppFixtures extends Fixture
         $manager->persist($brand2);
 
         $client1 = new Client();
-        $client1->setName('Client One');
+        $client1
+            ->setName('Client One')
+            ->setUsername('first');
+        $client1->setPassword($this->userPasswordHasher->hashPassword($client1, "test"));
+
         $manager->persist($client1);
 
         $client2 = new Client();
-        $client2->setName('Client two');
+        $client2
+            ->setName('Client Two')
+            ->setUsername('second');
+        $client2->setPassword($this->userPasswordHasher->hashPassword($client2, "test"));
         $manager->persist($client2);
 
         for ($i = 0; $i < 20; $i++){
