@@ -7,7 +7,6 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,9 +19,16 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UserController extends AbstractController
 {
     #[Route('/users', name: 'users', methods: ['GET'])]
-    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
+    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $users = $userRepository->findBy(['client' => $this->getUser()]);
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $client = $this->getUser();
+        if (!($client instanceof Client)){
+            return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_BAD_REQUEST, [], true);
+        }
+        $users = $userRepository->getAllByClientWithPagination($client, $page, $limit);
         $jsonUsers = $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
@@ -70,7 +76,7 @@ class UserController extends AbstractController
 
         $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
 
-        $location = $urlGenerator->generate('user', ['id' => $client->getId(), 'user_id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $urlGenerator->generate('user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }

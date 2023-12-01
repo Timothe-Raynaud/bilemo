@@ -6,6 +6,7 @@ use App\Entity\Smartphone;
 use App\Repository\SmartphoneRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -14,9 +15,11 @@ use Symfony\Component\Serializer\SerializerInterface;
 class SmartphoneController extends AbstractController
 {
     #[Route('/smartphones', name: 'smartphones', methods: ['GET'])]
-    public function getSmartphones(SmartphoneRepository $smartphoneRepository, SerializerInterface $serializer): JsonResponse
+    public function getSmartphones(SmartphoneRepository $smartphoneRepository, SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $smartphones = $smartphoneRepository->findAll();
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+        $smartphones = $smartphoneRepository->getAllWithPagination($page, $limit);
         $jsonSmartphones = $serializer->serialize($smartphones, 'json');
 
         return new JsonResponse($jsonSmartphones, Response::HTTP_OK, [], true);
