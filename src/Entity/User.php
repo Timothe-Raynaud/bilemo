@@ -3,22 +3,45 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use http\Message;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\Groups as SymfonyGroups;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *     exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ *
+ * @Hateoas\Relation(
+ *       "delete",
+ *       href = @Hateoas\Route(
+ *           "deleteUser",
+ *           parameters = { "id" = "expr(object.getId())" },
+ *       ),
+ *       exclusion = @Hateoas\Exclusion(groups="getUsers", excludeIf = "expr(not is_granted('IS_AUTHENTICATED_FULLY'))"),
+ * )
+ *
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
     #[ORM\Id]
     #[ORM\Column]
     #[ORM\GeneratedValue]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     #[Assert\NotBlank(message: "Le username est obligatoire")]
     #[Assert\Length(min: 5, max: 255,
         minMessage: "Le username doit faire au moins {{ limit }} caractères",
@@ -27,13 +50,15 @@ class User
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     #[Assert\NotBlank(message: "L'email est obligatoire")]
     #[Assert\Email(message: 'The email {{ value }} is not a valid email.',)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     #[Assert\NotBlank(message: "Le password est obligatoire")]
     #[Assert\Length(min: 5, max: 255,
         minMessage: "Le password doit faire au moins {{ limit }} caractères",
@@ -42,32 +67,39 @@ class User
     private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?string $address = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?string $cellphone = null;
 
     #[ORM\Column(length: 15, nullable: true)]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     private ?string $zipcode = null;
 
     #[ORM\Column]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     #[Assert\NotBlank(message: "La valeur is_registered est obligatoire")]
     private ?bool $is_registered = null;
 
     #[ORM\Column]
-    #[Groups(["getUsers", "addUser"])]
+    #[Groups(["getUsers"])]
+    #[SymfonyGroups(["addUser"])]
     #[Assert\NotBlank(message: "Un role est obligatoire")]
     private array $role = [];
 

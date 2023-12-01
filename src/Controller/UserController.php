@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\SerializerInterface as SymfonySerialize;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -37,7 +39,9 @@ class UserController extends AbstractController
             $item->tag("usersCache");
             $item->expiresAfter(60);
             $smartphoneList = $userRepository->getAllByClientWithPagination($client, $page, $limit);
-            return $serializer->serialize($smartphoneList, 'json', ['groups' => 'getUsers']);
+
+            $context = SerializationContext::create()->setGroups(['getUsers']);
+            return $serializer->serialize($smartphoneList, 'json', $context);
         });
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
@@ -50,7 +54,8 @@ class UserController extends AbstractController
             return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
         }
 
-        $jsonSmartphone = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+        $context = SerializationContext::create()->setGroups(['getUsers']);
+        $jsonSmartphone = $serializer->serialize($user, 'json', $context);
 
         return new JsonResponse($jsonSmartphone, Response::HTTP_OK, [], true);
     }
@@ -70,10 +75,10 @@ class UserController extends AbstractController
     }
 
     #[Route('/users', name:"createUser", methods: ['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool): JsonResponse
+    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool, SymfonySerialize $serializerSymony): JsonResponse
     {
         $client = $this->getUser();
-        $user = $serializer->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
+        $user = $serializerSymony->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
         $user->setClient($client);
 
         $errors = $validator->validate($user);
@@ -85,7 +90,8 @@ class UserController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+        $context = SerializationContext::create()->setGroups(['getUsers']);
+        $jsonUser = $serializer->serialize($user, 'json', $context);
 
         $location = $urlGenerator->generate('user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
