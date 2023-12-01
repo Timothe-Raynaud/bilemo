@@ -14,22 +14,31 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 #[Route('/api')]
 class UserController extends AbstractController
 {
     #[Route('/users', name: 'users', methods: ['GET'])]
-    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request,  TagAwareCacheInterface $cachePool): JsonResponse
     {
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
-
         $client = $this->getUser();
+
         if (!($client instanceof Client)){
             return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_BAD_REQUEST, [], true);
         }
-        $users = $userRepository->getAllByClientWithPagination($client, $page, $limit);
-        $jsonUsers = $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
+
+        $idCache = "getUsers-". $client->getId() . "-" . $page . "-" . $limit;
+
+        $jsonUsers = $cachePool->get($idCache, function (ItemInterface $item) use ($userRepository, $page, $client, $limit, $serializer) {
+            $item->tag("usersCache");
+            $item->expiresAfter(60);
+            $smartphoneList = $userRepository->getAllByClientWithPagination($client, $page, $limit);
+            return $serializer->serialize($smartphoneList, 'json', ['groups' => 'getUsers']);
+        });
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
@@ -47,12 +56,13 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
-    public function deleteUser(User $user, EntityManagerInterface $em): JsonResponse
+    public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
         if ($user->getClient() !== $this->getUser()){
             return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
         }
 
+        $cachePool->invalidateTags(["usersCache"]);
         $em->remove($user);
         $em->flush();
 
@@ -60,7 +70,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/users', name:"createUser", methods: ['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
+    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool): JsonResponse
     {
         $client = $this->getUser();
         $user = $serializer->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
@@ -71,6 +81,7 @@ class UserController extends AbstractController
             return new JsonResponse($serializer->serialize($errors, 'json'), Response::HTTP_BAD_REQUEST, [], true);
         }
 
+        $cachePool->invalidateTags(["usersCache"]);
         $em->persist($user);
         $em->flush();
 
