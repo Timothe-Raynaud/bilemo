@@ -18,10 +18,45 @@ use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 
 #[Route('/api')]
 class UserController extends AbstractController
 {
+    /**
+     * Cette méthode permet de récupérer l'ensemble des users rattaché à un client.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne l'ensemble des users rattaché à un client",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="La page que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     *
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="Le nombre d'éléments que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Users")
+     *
+     * @param UserRepository $userRepository
+     * @param SerializerInterface $serializer
+     * @param Request $request
+     * @param TagAwareCacheInterface $cachePool
+     * @return JsonResponse
+     */
     #[Route('/users', name: 'users', methods: ['GET'])]
     public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request,  TagAwareCacheInterface $cachePool): JsonResponse
     {
@@ -47,6 +82,24 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Cette méthode permet de récupérer les détails d'un utilisateur.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne les détails d'un utilisateur",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     *
+     * @OA\Tag(name="Users")
+     *
+     * @param User $user
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
+     */
     #[Route('/users/{id}', name: 'user', methods: ['GET'])]
     public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
@@ -60,6 +113,25 @@ class UserController extends AbstractController
         return new JsonResponse($jsonSmartphone, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Cette méthode permet de supprimer un utilisateur.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Supprime un utilisateur",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     *
+     * @OA\Tag(name="Users")
+     *
+     * @param User $user
+     * @param EntityManagerInterface $em
+     * @param TagAwareCacheInterface $cachePool
+     * @return JsonResponse
+     */
     #[Route('/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
@@ -74,10 +146,38 @@ class UserController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    /**
+     * Cette méthode permet d'ajouter un utilisateur'.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Ajoute un utilisateur",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     *
+     * @OA\Tag(name="Users")
+     *
+     * @param Request $request
+     * @param SerializerInterface $serializer
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param ValidatorInterface $validator
+     * @param EntityManagerInterface $em
+     * @param TagAwareCacheInterface $cachePool
+     * @param SymfonySerialize $serializerSymony
+     * @return JsonResponse
+     */
     #[Route('/users', name:"createUser", methods: ['POST'])]
     public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool, SymfonySerialize $serializerSymony): JsonResponse
     {
         $client = $this->getUser();
+
+        if (!($client instanceof Client)){
+            return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_BAD_REQUEST, [], true);
+        }
+
         $user = $serializerSymony->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
         $user->setClient($client);
 
