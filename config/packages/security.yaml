@@ -24,9 +24,9 @@ security:
             jwt: ~
 
     access_control:
-         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-         - { path: ^/api/login, roles: PUBLIC_ACCESS }
          - { path: ^/api/doc, roles: PUBLIC_ACCESS }
+         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
