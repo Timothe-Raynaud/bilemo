@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Smartphone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,7 +22,8 @@ class SmartphoneRepository extends ServiceEntityRepository
         parent::__construct($registry, Smartphone::class);
     }
 
-    public function getAllWithPagination($page, $limit) {
+    public function getAllWithPagination($page, $limit) : ArrayCollection
+    {
         $qb = $this->createQueryBuilder('s')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);

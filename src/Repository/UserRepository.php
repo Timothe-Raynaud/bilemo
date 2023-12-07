@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Client;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -22,7 +23,8 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function getAllByClientWithPagination(Client $client, int $page, int $limit) {
+    public function getAllByClientWithPagination(Client $client, int $page, int $limit) : ArrayCollection
+    {
         $qb = $this->createQueryBuilder('u')
             ->where('u.client = :client')
             ->setParameter(':client', $client)
