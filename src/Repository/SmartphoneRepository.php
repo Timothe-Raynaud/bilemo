@@ -22,7 +22,7 @@ class SmartphoneRepository extends ServiceEntityRepository
         parent::__construct($registry, Smartphone::class);
     }
 
-    public function getAllWithPagination($page, $limit) : ArrayCollection
+    public function getAllWithPagination($page, $limit) : array
     {
         $qb = $this->createQueryBuilder('s')
             ->setFirstResult(($page - 1) * $limit)

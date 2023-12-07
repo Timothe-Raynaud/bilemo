@@ -23,7 +23,7 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function getAllByClientWithPagination(Client $client, int $page, int $limit) : ArrayCollection
+    public function getAllByClientWithPagination(Client $client, int $page, int $limit) : array
     {
         $qb = $this->createQueryBuilder('u')
             ->where('u.client = :client')
