@@ -19,7 +19,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Annotations as OA;
 
 #[Route('/api')]
@@ -58,17 +57,17 @@ class UserController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/users', name: 'users', methods: ['GET'])]
-    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request,  TagAwareCacheInterface $cachePool): JsonResponse
+    public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cachePool): JsonResponse
     {
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
         $client = $this->getUser();
 
-        if (!($client instanceof Client)){
+        if (!($client instanceof Client)) {
             return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_BAD_REQUEST, [], true);
         }
 
-        $idCache = "getUsers-". $client->getId() . "-" . $page . "-" . $limit;
+        $idCache = "getUsers-" . $client->getId() . "-" . $page . "-" . $limit;
 
         $jsonUsers = $cachePool->get($idCache, function (ItemInterface $item) use ($userRepository, $page, $client, $limit, $serializer) {
             $item->tag("usersCache");
@@ -103,8 +102,8 @@ class UserController extends AbstractController
     #[Route('/users/{id}', name: 'user', methods: ['GET'])]
     public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
-        if ($user->getClient() !== $this->getUser()){
-            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
+        if ($user->getClient() !== $this->getUser()) {
+            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_UNAUTHORIZED, [], true);
         }
 
         $context = SerializationContext::create()->setGroups(['getUsers']);
@@ -135,8 +134,8 @@ class UserController extends AbstractController
     #[Route('/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
-        if ($user->getClient() !== $this->getUser()){
-            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_BAD_REQUEST, [], true);
+        if ($user->getClient() !== $this->getUser()) {
+            return new JsonResponse('Vous n\'avez pas droit d\'accès à cet utilisateur.', Response::HTTP_UNAUTHORIZED, [], true);
         }
 
         $cachePool->invalidateTags(["usersCache"]);
@@ -169,20 +168,20 @@ class UserController extends AbstractController
      * @param SymfonySerialize $serializerSymony
      * @return JsonResponse
      */
-    #[Route('/users', name:"createUser", methods: ['POST'])]
+    #[Route('/users', name: "createUser", methods: ['POST'])]
     public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool, SymfonySerialize $serializerSymony): JsonResponse
     {
         $client = $this->getUser();
 
-        if (!($client instanceof Client)){
-            return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_BAD_REQUEST, [], true);
+        if (!($client instanceof Client)) {
+            return new JsonResponse('Vous n\'avez pas accés à ce endpoint', Response::HTTP_UNAUTHORIZED, [], true);
         }
 
         $user = $serializerSymony->deserialize($request->getContent(), User::class, 'json', ['groups' => 'addUser']);
         $user->setClient($client);
 
         $errors = $validator->validate($user);
-        if ($errors->count() > 0){
+        if ($errors->count() > 0) {
             return new JsonResponse($serializer->serialize($errors, 'json'), Response::HTTP_BAD_REQUEST, [], true);
         }
 
