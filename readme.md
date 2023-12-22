@@ -14,5 +14,5 @@ Voici les différentes étapes d'installation du projet en local :
 
 À la racine du projet, vous trouverez un dossier ___livrable___ comprenant les different élement demandé pour le livrable :
 - Un dossier diagramme comprenant tous les diagrammes.
-- Un fichier ___api.html___ comprenant la documentation (Elle est aussi accessible via le site à l'url ```/api/doc```)
+- Un fichier ___api.html___ comprenant la documentation. (Elle est aussi accessible via le site à l'url ```/api/doc```)
 - Un fichier ___symfonyInsight.txt___ avec un lien vers la dernière analyse du projet.
