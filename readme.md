@@ -9,6 +9,8 @@ Voici les différentes étapes d'installation du projet en local :
     - ```php bin/console doctrine:database:create```
     - ```php bin/console doctrine:migrations:migrate```
     - ```php bin/console doctrine:fixtures:load```
+    - ```php bin/console lexik:jwt:generate-keypair```
+
 
 ## Livrable
 
