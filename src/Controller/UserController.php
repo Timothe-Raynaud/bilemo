@@ -116,7 +116,7 @@ class UserController extends AbstractController
      * Cette méthode permet de supprimer un utilisateur.
      *
      * @OA\Response(
-     *     response=200,
+     *     response=204,
      *     description="Supprime un utilisateur",
      *     @OA\JsonContent(
      *        type="array",
@@ -149,7 +149,7 @@ class UserController extends AbstractController
      * Cette méthode permet d'ajouter un utilisateur'.
      *
      * @OA\Response(
-     *     response=200,
+     *     response=201,
      *     description="Ajoute un utilisateur",
      *     @OA\JsonContent(
      *        type="array",
