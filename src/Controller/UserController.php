@@ -6,6 +6,7 @@ use App\Entity\Client;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -55,6 +56,7 @@ class UserController extends AbstractController
      * @param Request $request
      * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
+     * @throws InvalidArgumentException
      */
     #[Route('/users', name: 'users', methods: ['GET'])]
     public function getUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cachePool): JsonResponse
@@ -130,6 +132,7 @@ class UserController extends AbstractController
      * @param EntityManagerInterface $em
      * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
+     * @throws InvalidArgumentException
      */
     #[Route('/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
@@ -156,6 +159,36 @@ class UserController extends AbstractController
      *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
      *     )
      * )
+     * @OA\RequestBody(
+     *       required=true,
+     *       @OA\JsonContent(
+     *           example={
+     *               "username": "username",
+     *               "email": "test@test.com",
+     *               "password": "password",
+     *               "firstname": "Firstname",
+     *               "lastname": "Lastname",
+     *               "address": " 21 address test",
+     *               "cellphone": "+33666666666",
+     *               "zipcode": "34000",
+     *               "is_registered": "true",
+     *               "role": "['ROLE_PREMIUM']"
+     *           },
+     *           @OA\Schema (
+     *                type="object",
+     *                @OA\Property(property="username", required=true, description="Username", type="string"),
+     *                @OA\Property(property="email", required=true, description="Email", type="string"),
+     *                @OA\Property(property="password", required=true, description="Password", type="string"),
+     *                @OA\Property(property="firstname", required=false, description="Firstname", type="string"),
+     *                @OA\Property(property="lastname", required=false, description="Lastname", type="string"),
+     *                @OA\Property(property="address", required=false, description="Adresse", type="string"),
+     *                @OA\Property(property="cellphone", required=false, description="Cellphone", type="string"),
+     *                @OA\Property(property="zipcode", required=false, description="Zipcode", type="string"),
+     *                @OA\Property(property="is_registered", required=false, description="Is Registred", type="boolean"),
+     *                @OA\Property(property="role", required=true, description="Role", type="array")
+     *           )
+     *       )
+     *   )
      *
      * @OA\Tag(name="Users")
      *
@@ -167,6 +200,7 @@ class UserController extends AbstractController
      * @param TagAwareCacheInterface $cachePool
      * @param SymfonySerialize $serializerSymony
      * @return JsonResponse
+     * @throws InvalidArgumentException
      */
     #[Route('/users', name: "createUser", methods: ['POST'])]
     public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cachePool, SymfonySerialize $serializerSymony): JsonResponse
